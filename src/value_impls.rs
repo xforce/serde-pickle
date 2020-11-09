@@ -57,6 +57,16 @@ impl<'de> de::Deserialize<'de> for Value {
             }
 
             #[inline]
+            fn visit_i128<E>(self, value: i128) -> StdResult<Value, E> {
+                Ok(Value::Int(BigInt::from(value)))
+            }
+
+            #[inline]
+            fn visit_u128<E>(self, value: u128) -> StdResult<Value, E> {
+                Ok(Value::Int(BigInt::from(value)))
+            }
+
+            #[inline]
             fn visit_str<E: de::Error>(self, value: &str) -> StdResult<Value, E> {
                 self.visit_string(String::from(value))
             }
@@ -147,6 +157,16 @@ impl<'de> de::Deserialize<'de> for HashableValue {
             }
 
             #[inline]
+            fn visit_i128<E>(self, value: i128) -> StdResult<HashableValue, E> {
+                Ok(HashableValue::Int(BigInt::from(value)))
+            }
+
+            #[inline]
+            fn visit_u128<E>(self, value: u128) -> StdResult<HashableValue, E> {
+                Ok(HashableValue::Int(BigInt::from(value)))
+            }
+
+            #[inline]
             fn visit_f64<E>(self, value: f64) -> StdResult<HashableValue, E> {
                 Ok(HashableValue::F64(value))
             }
@@ -230,9 +250,14 @@ impl<'de: 'a, 'a> de::Deserializer<'de> for &'a mut Deserializer {
             Value::Int(v) => {
                 if let Some(i) = v.to_i64() {
                     visitor.visit_i64(i)
+                } else if let Some(i) = v.to_u64() {
+                    visitor.visit_u64(i)
+                } else if let Some(i) = v.to_i128() {
+                    visitor.visit_i128(i)
+                } else if let Some(i) = v.to_u128() {
+                    visitor.visit_u128(i)
                 } else {
-                    return Err(Error::Syntax(
-                        ErrorCode::InvalidValue("integer too large".into())));
+                    return Err(Error::Syntax(ErrorCode::InvalidValue("integer too large".into())));
                 }
             },
             Value::F64(v) => visitor.visit_f64(v),
